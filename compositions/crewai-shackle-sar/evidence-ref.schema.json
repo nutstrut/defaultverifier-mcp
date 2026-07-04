@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://defaultverifier.com/schema/evidence-ref-v0.1.json",
+  "title": "evidence_refs entry (evidence-format-neutral)",
+  "description": "A single entry in an implementation conformance result row's evidence_refs array. This slot is intentionally evidence-format neutral: a Settlement Attestation Receipt (SAR) is ONE type that can fill it, not the only one. Any other verifiable evidence format (a signed log entry, a different receipt scheme, a hash-chained ledger export, etc.) can occupy the same slot using its own `type` value.",
+  "type": "object",
+  "required": ["type", "uri", "digest", "boundary"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "Evidence format identifier. 'sar' is one recognized value; implementations are free to define others (e.g. 'ledger_entry', 'signed_log', 'custom').",
+      "examples": ["sar", "ledger_entry", "signed_log", "custom"]
+    },
+    "uri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Location where the evidence can be independently fetched or resolved."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Content digest of the evidence artifact, for tamper-evidence. Algorithm prefix required."
+    },
+    "receipt_profile": {
+      "type": "string",
+      "description": "Optional. Only meaningful when type == 'sar'. Names the receipt profile, e.g. 'sar-402' for the x402-adjacent SAR profile. Absent or ignored for non-SAR evidence types.",
+      "examples": ["sar-402"]
+    },
+    "verification_hint": {
+      "type": "string",
+      "description": "Optional. A short human-readable pointer to how a third party can independently verify this evidence (e.g. a CLI command, an API endpoint, a spec URL). Not itself proof of anything."
+    },
+    "boundary": {
+      "type": "string",
+      "description": "What this evidence attests to and, just as importantly, what it does NOT attest to. Required so evidence_refs entries cannot be read as broader claims than they support (e.g. a SAR attests to a delivery/verification boundary event, not payment finality or legal finality).",
+      "examples": [
+        "delivery-boundary evidence only; not proof of payment or legal finality"
+      ]
+    },
+    "demonstration": {
+      "type": "boolean",
+      "description": "Optional. If true, this evidence_ref points to a demo/example artifact rather than evidence tied to a specific production transaction. MUST be set true when referencing demo receipts (e.g. defaultverifier.com/demo/sar-402)."
+    }
+  },
+  "additionalProperties": true
+}

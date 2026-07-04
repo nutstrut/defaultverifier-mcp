@@ -1,0 +1,29 @@
+{
+  "runtime": "python3.10",
+  "implementation_version": "defaultverifier-composition-artifact-0.1.0",
+  "fixture_version": {
+    "source_repo": "https://github.com/Fame510/SHACKLE",
+    "source_commit": "c34c213078815552002b0395175965b60426a3ff",
+    "fixture_path": "fixtures/conformance.json"
+  },
+  "case_id": "allow_within_thresholds",
+  "observed_decision": "ALLOW",
+  "expected_decision": "ALLOW",
+  "result": "PASS",
+  "evidence_refs": [
+    {
+      "type": "sar",
+      "uri": "https://defaultverifier.com/demo/sar-402",
+      "digest": "sha256:91e2ae85f03c7a8e7df10e8862895b99456cb13abc50b4e23ba84f1c15b3b8c9",
+      "receipt_profile": "sar-402",
+      "verification_hint": "GET https://defaultverifier.com/demo/sar-402 and recompute the receipt digest from the published preimage payload in the attest-service repo.",
+      "boundary": "delivery-boundary evidence only: attests that this composition artifact's conformance check ran and was recorded at a point in time. Not proof of payment, not proof of legal finality, not a claim that SHACKLE emits or consumes SAR receipts.",
+      "demonstration": true
+    }
+  ],
+  "terminal_outcome_ref": {
+    "note": "No terminal payment/settlement outcome exists for this artifact. This field is present for shape-completeness (matching the agreed CrewAI-thread result-row contract) and is intentionally null here.",
+    "value": null
+  },
+  "_claim_boundary": "This result row demonstrates the evidence_refs slot pointed at a demonstration SAR receipt. It does not assert SHACKLE adoption of SAR, does not assert CrewAI or hummbl-dev adoption of SAR, and does not modify or re-run SHACKLE's decide() surface. See README.md in this artifact directory for full non-claims."
+}

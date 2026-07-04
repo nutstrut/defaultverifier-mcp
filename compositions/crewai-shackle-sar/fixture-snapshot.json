@@ -1,0 +1,14 @@
+{
+  "_attribution": {
+    "source_repo": "https://github.com/Fame510/SHACKLE",
+    "source_path": "fixtures/conformance.json",
+    "source_commit": "c34c213078815552002b0395175965b60426a3ff",
+    "note": "Minimal single-case excerpt, reproduced for composition-artifact purposes only. Not a copy of the full fixture set. See SHACKLE repo for the complete, authoritative fixture file."
+  },
+  "case_id": "allow_within_thresholds",
+  "expected_verdict": "ALLOW",
+  "expected_reason": "within_thresholds",
+  "canonicalization_id": "sha256_json_sortedkeys_compact_v1",
+  "canonicalization_rule": "sha256(json.dumps(call.params, sort_keys=True, separators=(\",\", \":\")))",
+  "canonical_hash": "f487a46f520575a76a1537f2235bd32acdefa067fc54a69d7e85962650ac7efc"
+}
