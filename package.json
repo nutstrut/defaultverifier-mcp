@@ -1,0 +1,19 @@
+{
+  "name": "defaultverifier-mcp",
+  "version": "0.1.0",
+  "description": "DefaultVerifier MCP server — Phase A: local-first SAR v0.1 receipt verification",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node test/self-test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "canonicalize": "^2.0.0",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
