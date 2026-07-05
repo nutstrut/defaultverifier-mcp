@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://defaultverifier.com/schema/ds.evidence_ref.v0.1.json",
+  "title": "ds.evidence_ref.v0.1",
+  "description": "Draft, format-neutral reference to a verifiable evidence object. Internal draft pending Keith approval; not an adopted standard. SAR is one supported evidence_type, not a required format. See README.md for full spec, boundary requirements, and consumer guidance.",
+  "type": "object",
+  "required": ["schema_id", "ref_id", "evidence_type", "boundary", "relation"],
+  "properties": {
+    "schema_id": {
+      "type": "string",
+      "const": "ds.evidence_ref.v0.1",
+      "description": "Must equal 'ds.evidence_ref.v0.1'."
+    },
+    "ref_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable local identifier for this evidence reference inside the parent artifact.",
+      "examples": ["evidence-ref-001"]
+    },
+    "evidence_type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Format/type of the referenced evidence. Not restricted to SAR; any verifiable evidence type may be used.",
+      "examples": ["sar", "sar_402", "conformance_result", "transition_receipt", "signed_log_entry", "external_artifact"]
+    },
+    "uri": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI/URL where the evidence object can be retrieved, if available. May be omitted only if digest or embedded_ref is present."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+:[0-9a-fA-F]+$",
+      "description": "Content digest of the referenced evidence object, if known. Algorithm prefix required, e.g. sha256:...",
+      "examples": ["sha256:91e2ae85f03c7a8e7df10e8862895b99456cb13abc50b4e23ba84f1c15b3b8c9"]
+    },
+    "digest_canonicalization": {
+      "type": "string",
+      "description": "Canonicalization rule used to compute digest, if applicable.",
+      "examples": ["jcs-rfc8785", "sorted_keys_compact_v0"]
+    },
+    "embedded_ref": {
+      "description": "Inline evidence object or excerpt, used when no external uri/digest locator applies (e.g. a small embedded artifact). Opaque to this schema.",
+      "type": ["object", "string"]
+    },
+    "issuer": {
+      "type": "string",
+      "description": "Optional issuer or system that produced the evidence. Must not be treated as authority by itself."
+    },
+    "subject": {
+      "type": "string",
+      "description": "Optional subject/claim/outcome this evidence supports. Keep short and claim-bounded."
+    },
+    "verification": {
+      "type": "object",
+      "description": "Verification hints, not verification results. Does not itself assert PASS/FAIL.",
+      "properties": {
+        "method": { "type": "string" },
+        "public_keys": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "verifier": { "type": "string" },
+        "offline_verifiable": { "type": "boolean" },
+        "verification_notes": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "boundary": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable boundary statement: what this evidence reference does and does not prove. Required on every object. Must not claim legal/payment finality for payment- or settlement-related evidence unless separately proven."
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Timestamp for when the evidence reference object was created, if known."
+    },
+    "relation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "How the evidence relates to the parent artifact.",
+      "examples": ["supports_observed_outcome", "delivery_boundary_evidence", "decision_boundary_evidence", "transition_evidence", "audit_reference", "conformance_evidence"]
+    },
+    "retrieved_at": {
+      "type": "string",
+      "description": "Recommended. When the referenced evidence was last fetched/checked."
+    },
+    "source_commit": {
+      "type": "string",
+      "description": "Recommended. Commit hash for provenance, when the evidence lives in a git-tracked artifact."
+    },
+    "profile": {
+      "type": "string",
+      "description": "Recommended. Named sub-profile of evidence_type, e.g. 'sar-402' under evidence_type 'sar'."
+    },
+    "receipt_id": {
+      "type": "string",
+      "description": "Recommended. Meaningful only when evidence_type is receipt-shaped; absent/ignored otherwise."
+    },
+    "parent_artifact_id": {
+      "type": "string",
+      "description": "Recommended. Identifier of the artifact this evidence ref is embedded in."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Recommended. Free-text context that doesn't fit elsewhere."
+    }
+  },
+  "anyOf": [
+    { "required": ["uri"] },
+    { "required": ["digest"] },
+    { "required": ["embedded_ref"] }
+  ],
+  "additionalProperties": true
+}

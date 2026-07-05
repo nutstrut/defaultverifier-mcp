@@ -1,0 +1,24 @@
+{
+  "schema_id": "ds.evidence_ref.v0.1",
+  "ref_id": "evidence-ref-001",
+  "evidence_type": "sar_402",
+  "profile": "sar-402",
+  "uri": "https://defaultverifier.com/demo/sar-402",
+  "digest": "sha256:91e2ae85f03c7a8e7df10e8862895b99456cb13abc50b4e23ba84f1c15b3b8c9",
+  "digest_canonicalization": "sorted_keys_compact_v0",
+  "issuer": "DefaultVerifier",
+  "subject": "conformance check for case allow_within_thresholds recorded at a delivery boundary",
+  "verification": {
+    "method": "GET https://defaultverifier.com/v1/attest/receipt/sha256%3A91e2ae85f03c7a8e7df10e8862895b99456cb13abc50b4e23ba84f1c15b3b8c9 and recompute the receipt digest from the published preimage payload in the attest-service repo",
+    "verifier": "DefaultVerifier",
+    "offline_verifiable": false,
+    "verification_notes": "The resolver response is a ledger envelope, not the digest preimage. To recompute receipt_id, canonicalize the original payload_without_integrity and hash it — do not hash the resolver response body."
+  },
+  "boundary": "Delivery-boundary evidence only: attests that a conformance check was recorded at a point in time, at a delivery/decision boundary, by DefaultVerifier. This is a demonstration receipt (the public SAR-402 demo), not evidence tied to a specific SHACKLE or CrewAI production transaction. It does NOT prove SHACKLE adoption of SAR, CrewAI or hummbl-dev adoption of SAR, endorsement by any named party, payment settlement, or legal/payment finality.",
+  "relation": "delivery_boundary_evidence",
+  "created_at": "2026-07-04T00:00:00Z",
+  "retrieved_at": "2026-07-05T00:00:00Z",
+  "source_commit": "5fad44a",
+  "parent_artifact_id": "crewai-shackle-sar-composition-20260704/result-row.example.json",
+  "notes": "Reuses the same public demo digest and resolver path already documented in artifacts/crewai-shackle-sar-composition-20260704/ and mirrored at https://github.com/nutstrut/defaultverifier-mcp/tree/main/compositions/crewai-shackle-sar. No new receipt ID invented for this example."
+}

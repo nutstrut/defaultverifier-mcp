@@ -1,0 +1,19 @@
+{
+  "schema_id": "ds.evidence_ref.v0.1",
+  "ref_id": "evidence-ref-003",
+  "evidence_type": "conformance_result",
+  "uri": "https://github.com/nutstrut/defaultverifier-mcp/tree/main/compositions/crewai-shackle-sar/result-row.example.json",
+  "issuer": "defaultverifier-composition-artifact-0.1.0 (local implementation, not an authority)",
+  "subject": "implementation conformance result row for case allow_within_thresholds",
+  "verification": {
+    "method": "Fetch result-row.example.json and run verify_composition.py (stdlib-only, no network calls) to structurally validate the row.",
+    "offline_verifiable": true,
+    "verification_notes": "This evidence ref points at a conformance RESULT ARTIFACT, not a verdict. The row's own 'result' field (PASS/FAIL/NON_CONFORMANT/UNTESTABLE) and 'observed_decision'/'expected_decision' fields (ALLOW/DENY/HITL) remain on the parent artifact and are intentionally NOT duplicated or asserted inside this evidence ref, per ds.evidence_ref.v0.1 section 6 (verification hints vs. verification result)."
+  },
+  "boundary": "This evidence ref points at an implementation conformance result row and the receipt it in turn references; it does not itself assert PASS/FAIL or ALLOW/DENY/HITL. It does not merge the conformance vocabulary or the control vocabulary into the evidence layer. It is not proof of SHACKLE or CrewAI adoption of anything, not proof of payment or legal finality, and not an endorsement by any named party.",
+  "relation": "conformance_evidence",
+  "created_at": "2026-07-04T00:00:00Z",
+  "source_commit": "55aa954",
+  "parent_artifact_id": "example-control-layer-decision-record-illustrative",
+  "notes": "Illustrative parent_artifact_id — this example shows how a control-layer or workflow artifact's evidence_refs entry can point at a conformance result row without collapsing PASS/FAIL or ALLOW/DENY/HITL into the evidence ref itself."
+}
