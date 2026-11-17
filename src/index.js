@@ -16,15 +16,20 @@ import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprot
 
 import { TOOL_DEFINITION as verifyReceiptDef, handleVerifyReceipt } from './tools/verifyReceipt.js';
 import { TOOL_DEFINITION as logDef, handleGetVerificationLog } from './tools/verificationLog.js';
+import {
+  TOOL_DEFINITION as verifyPortableReceiptDef,
+  handleVerifyPortableSarReceipt,
+} from './tools/verifyPortableReceipt.js';
 
 const PORT = Number(process.env.PORT || 3013);
 const HOST = process.env.HOST || '127.0.0.1';
 const MCP_PATH = process.env.MCP_PATH || '/mcp';
 
-const TOOLS = [verifyReceiptDef, logDef];
+const TOOLS = [verifyReceiptDef, logDef, verifyPortableReceiptDef];
 const HANDLERS = {
   verify_receipt: handleVerifyReceipt,
   get_verification_log: handleGetVerificationLog,
+  verify_portable_sar_receipt: handleVerifyPortableSarReceipt,
 };
 
 function buildServer() {
