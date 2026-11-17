@@ -4,7 +4,9 @@ Agent-native MCP server for DefaultVerifier. Phase A starts with verification, n
 
 ## What this is
 
-An MCP server that exposes DefaultVerifier's verification surface to AI agents. It verifies signed SAR v0.1 settlement receipts locally — offline, no network required.
+An MCP server that exposes DefaultVerifier's verification surface to AI agents. It verifies signed settlement receipts locally — offline, no network required. This is a **verifier** MCP: it never issues, signs or emits receipts and never contacts SettlementWitness. Issuance/emission is a different service (the hosted SettlementWitness MCP, port 3003, not part of this repo). Verification ≠ issuance; offline verification ≠ hosted evaluation.
+
+This server is a local dev server and is not deployed to production by this repo.
 
 **Doctrine:**
 ```
@@ -15,6 +17,15 @@ Verification must leave evidence
 ```
 
 ## Phase A tools
+
+| Tool | Scope | Trust root | Network |
+|------|-------|-----------|---------|
+| `verify_receipt` | Default Settlement v0.1 (wallet-bound) | bundled v0.1 registry (`keys/sar-keys.json`) | none |
+| `verify_portable_sar_receipt` | Portable SAR v0.1 (six-field profile) | caller-supplied `key_policy` (no default) | none |
+| `verify_receipt_v02` | Default Settlement `0.2-candidate` | pinned registry snapshot (`keys/v02/`) | none |
+| `get_verification_log` | local log read (not a verifier) | n/a | none |
+
+The three verifiers are separate and never upgrade or reinterpret each other's receipts. None can issue a receipt.
 
 ### `verify_receipt`
 
@@ -31,6 +42,15 @@ Verify a signed SAR v0.1 receipt locally.
 - A valid FAIL receipt returns `{ status:"PASS", verdict:"FAIL" }`
 - A tampered receipt returns `{ status:"INVALID" }`
 
+### `verify_portable_sar_receipt`
+
+Verify a **Portable SAR v0.1** (six-field, original/portable profile) receipt. Separate from `verify_receipt`
+(neither handler calls the other).
+
+- Offline, no network; no receipt issuance.
+- No bundled trust store: the caller **must** supply `key_policy` (`kid -> {pubkey_b64url, profiles, source}`).
+- `counterparty` / `_ext`, if present, are reported as unsigned metadata and never as an attested wallet binding.
+
 ### `verify_receipt_v02`
 
 Verify a Default Settlement **v0.2-candidate** receipt (`receipt_version: "0.2-candidate"`, profiles
@@ -38,7 +58,10 @@ Verify a Default Settlement **v0.2-candidate** receipt (`receipt_version: "0.2-c
 Additive: `verify_receipt` (v0.1) is unchanged, and v0.1 / portable receipts sent here are rejected as
 `NOT_A_V02_RECEIPT`, never upgraded.
 
-- Offline, no network. Trust root is the bundled, pinned **full registry** snapshot
+- Offline only, no network fetch, no receipt issuance, never contacts SettlementWitness. `0.2-candidate` is
+  supported literally; it is not renamed to a finalized `0.2`. Not deployed by this change.
+- Signed `properties` feed the deterministic boundary; a valid `FAIL` or `INDETERMINATE` receipt is still a valid receipt.
+- Trust root is the bundled, pinned **full registry** snapshot
   `keys/v02/sar-keys-v02-snapshot.json` (not JWKS: only the registry carries key status, use and
   authorized profiles). Provenance and sha256 are in the result (`issuer.trust_snapshot`) and in
   `keys/v02/sar-keys-v02-snapshot.provenance.json`. No caller key override, no refresh.
@@ -94,7 +117,7 @@ MCP endpoint: `http://127.0.0.1:3013/mcp`
 
 ## Local-first design
 
-`verify_receipt` and `verify_receipt_v02` require no network. `verify_receipt` uses:
+`verify_receipt`, `verify_portable_sar_receipt` and `verify_receipt_v02` require no network. `verify_receipt` uses:
 - `keys/sar-keys.json` — bundled public key registry (kid-01, kid-02, kid-03)
 - Node.js built-in `crypto` for Ed25519 verification
 - `canonicalize` npm package (RFC 8785/JCS) for byte-for-byte parity with the Python verifier

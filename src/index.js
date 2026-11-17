@@ -1,9 +1,11 @@
 /**
  * DefaultVerifier MCP Server — Phase A
  *
- * Streamable HTTP MCP server exposing two tools:
+ * Streamable HTTP MCP server exposing four tools:
  *   - verify_receipt: local-first SAR v0.1 receipt verification (offline)
  *   - get_verification_log: read /var/www/html/verified.json locally
+ *   - verify_portable_sar_receipt: Portable SAR v0.1 verification (offline, caller-supplied key policy)
+ *   - verify_receipt_v02: v0.2-candidate receipt verification (offline, pinned trust snapshot)
  *
  * Dev port: 127.0.0.1:3013
  * Does not touch production nginx/pm2/settlement-witness-mcp.
@@ -109,5 +111,5 @@ app.all(MCP_PATH, async (req, res) => {
 
 app.listen(PORT, HOST, () => {
   console.log(`DefaultVerifier MCP Phase A listening on http://${HOST}:${PORT}${MCP_PATH}`);
-  console.log('Tools: verify_receipt, get_verification_log, verify_receipt_v02');
+  console.log(`Tools: ${TOOLS.map((t) => t.name).join(', ')}`);
 });
