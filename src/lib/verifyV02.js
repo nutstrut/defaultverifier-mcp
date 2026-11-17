@@ -66,6 +66,14 @@ export const NON_CLAIMS = [
 ];
 
 const RECEIPT_ID_RE = /^sha256:[0-9a-f]{64}$/;
+// Every SHA-256 digest string in the contract (receipt_id, condition_digest, evidence_digest) is
+// exactly `sha256:` + 64 lowercase hex characters, matched against the WHOLE string. Length alone
+// is not the rule: UTF-16 length (JavaScript) and code-point length (Python) disagree on astral text.
+const DIGEST_RE = RECEIPT_ID_RE;
+// Normative nesting cap, enforced identically in every implementation (SPEC section 3a).
+// A container (object or array) at nesting depth > MAX_JSON_DEPTH is rejected; the outermost
+// container is depth 1.
+export const MAX_JSON_DEPTH = 64;
 const SIG_BODY_RE = /^[A-Za-z0-9_-]{86}$/;
 const B64URL_RE = /^[A-Za-z0-9_-]+$/;
 
@@ -83,6 +91,10 @@ const nonEmptyStr = (v) => isStr(v) && !WS_ONLY.test(v);
 const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 /** Sort by UTF-16 code unit (JS default), the order RFC 8785 uses for keys. */
 const u16sorted = (items) => [...items].sort();
+/** Own, enumerable data property even for the name `__proto__` (plain assignment would drop it). */
+const setOwn = (obj, key, value) => {
+  Object.defineProperty(obj, key, { value, enumerable: true, writable: true, configurable: true });
+};
 
 // ---------------------------------------------------------------------------
 // RFC 8785 canonicalization (subset sufficient for signed cores; fail closed)
@@ -106,7 +118,7 @@ function jcsString(s) {
   return JSON.stringify(s);
 }
 
-function jcsValue(v) {
+function jcsValue(v, depth = 0) {
   if (v === null) return 'null';
   if (v === true) return 'true';
   if (v === false) return 'false';
@@ -117,15 +129,24 @@ function jcsValue(v) {
     }
     return String(v === 0 ? 0 : v);
   }
-  if (Array.isArray(v)) return '[' + v.map(jcsValue).join(',') + ']';
+  if ((Array.isArray(v) || isObj(v)) && depth + 1 > MAX_JSON_DEPTH) {
+    throw new CanonicalizationError('nesting exceeds the maximum depth');
+  }
+  if (Array.isArray(v)) return '[' + v.map((i) => jcsValue(i, depth + 1)).join(',') + ']';
   if (isObj(v)) {
-    return '{' + Object.keys(v).sort().map((k) => jcsString(k) + ':' + jcsValue(v[k])).join(',') + '}';
+    return '{' + Object.keys(v).sort().map((k) => jcsString(k) + ':' + jcsValue(v[k], depth + 1)).join(',') + '}';
   }
   throw new CanonicalizationError('unsupported JSON value type');
 }
 
 export function canonicalize(value) {
-  return Buffer.from(jcsValue(value), 'utf8');
+  try {
+    return Buffer.from(jcsValue(value), 'utf8');
+  } catch (e) {
+    // defensive: the explicit depth cap should always fire first
+    if (e instanceof RangeError) throw new CanonicalizationError('nesting exceeds the engine limit');
+    throw e;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -145,7 +166,27 @@ export function decodeBase64urlStrict(body) {
 
 class ParseError extends Error { constructor(code) { super(code); this.code = code; } }
 
+const NUMBER_RE = /-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/y;
+
+/** True if the text nests containers deeper than `limit`. String-aware, linear and syntax-agnostic;
+ * identical in every implementation, so a depth rejection is the same everywhere. */
+function jsonDepthExceeds(text, limit) {
+  let depth = 0; let inString = false; let escaped = false;
+  for (let k = 0; k < text.length; k++) {
+    const ch = text[k];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+    } else if (ch === '"') inString = true;
+    else if (ch === '[' || ch === '{') { depth++; if (depth > limit) return true; }
+    else if (ch === ']' || ch === '}') depth--;
+  }
+  return false;
+}
+
 function strictParse(text) {
+  if (jsonDepthExceeds(text, MAX_JSON_DEPTH)) throw new ParseError('MALFORMED_JSON');
   let i = 0;
   const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
   const fail = () => { throw new ParseError('MALFORMED_JSON'); };
@@ -161,7 +202,8 @@ function strictParse(text) {
     return number();
   }
   function number() {
-    const m = /^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/.exec(text.slice(i));
+    NUMBER_RE.lastIndex = i;
+    const m = NUMBER_RE.exec(text);
     if (!m) fail();
     i += m[0].length;
     return Number(m[0]);
@@ -326,7 +368,7 @@ function emptyResult(receipt, provenance) {
 
 function boundary(props) {
   const mapped = {};
-  for (const n of u16sorted(Object.keys(props))) mapped[n] = STATE_TO_BOUNDARY[props[n]];
+  for (const n of u16sorted(Object.keys(props))) setOwn(mapped, n, STATE_TO_BOUNDARY[props[n]]);
   const notImplied = [...ALWAYS_NOT_IMPLIED];
   for (const [prop, claim] of Object.entries(GATED_CLAIMS)) if (props[prop] !== 'pass') notImplied.push(claim);
   const by = (s) => u16sorted(Object.keys(mapped).filter((n) => mapped[n] === s));
@@ -414,7 +456,7 @@ function verifyInner(receipt, trustIndex, result) {
   const badBasis = BASIS_FIELDS.filter((f) => !nonEmptyStr(basis[f]));
   for (const f of ['condition_digest', 'evidence_digest']) {
     const v = basis[f];
-    if (!badBasis.includes(f) && !(v.startsWith('sha256:') && v.length === 71)) badBasis.push(f);
+    if (!badBasis.includes(f) && !DIGEST_RE.test(v)) badBasis.push(f);
   }
   if (badBasis.length) {
     throw new Reject('VERIFICATION_BASIS_INVALID', 'verification_basis field empty or malformed', { fields: u16sorted(badBasis) });
@@ -486,6 +528,6 @@ function verifyInner(receipt, trustIndex, result) {
   result.checks = checksFor(null);
   result.issuer_verdict = { verdict, reason_code: receipt.reason_code };
   result.signed_properties = {};
-  for (const k of u16sorted(Object.keys(props))) result.signed_properties[k] = props[k];
+  for (const k of u16sorted(Object.keys(props))) setOwn(result.signed_properties, k, props[k]);
   result.boundary = boundary(props);
 }

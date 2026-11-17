@@ -50,6 +50,10 @@ Additive: `verify_receipt` (v0.1) is unchanged, and v0.1 / portable receipts sen
   external effect, general agent safety, endorsement, certification).
 - `unsigned_fields_present` lists top-level fields outside the signed core (e.g. `_unsigned`, `payment`);
   they never affect validity.
+- `established` means *established as an authentic issuer-signed property of the receipt*, not independently
+  verified external truth. Digests must be `sha256:` + 64 lowercase hex. Input nested deeper than 64 containers is
+  `MALFORMED_JSON`; out-of-range numbers are rejected in the signed core and inert in unsigned fields; a signed
+  property named `__proto__` is preserved like any other.
 - Unknown `verifier_kid` fails closed (`UNKNOWN_KEY`); reserved / withdrawn keys (e.g. `-04`) are `KEY_NOT_ACTIVE`;
   a key not authorized for the receipt's profile is `PROFILE_NOT_AUTHORIZED`; a retired key verifies
   historically with `issuer.key_currency: "historical"`.
