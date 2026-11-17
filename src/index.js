@@ -16,15 +16,17 @@ import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprot
 
 import { TOOL_DEFINITION as verifyReceiptDef, handleVerifyReceipt } from './tools/verifyReceipt.js';
 import { TOOL_DEFINITION as logDef, handleGetVerificationLog } from './tools/verificationLog.js';
+import { TOOL_DEFINITION as verifyReceiptV02Def, handleVerifyReceiptV02 } from './tools/verifyReceiptV02.js';
 
 const PORT = Number(process.env.PORT || 3013);
 const HOST = process.env.HOST || '127.0.0.1';
 const MCP_PATH = process.env.MCP_PATH || '/mcp';
 
-const TOOLS = [verifyReceiptDef, logDef];
+const TOOLS = [verifyReceiptDef, logDef, verifyReceiptV02Def];
 const HANDLERS = {
   verify_receipt: handleVerifyReceipt,
   get_verification_log: handleGetVerificationLog,
+  verify_receipt_v02: handleVerifyReceiptV02,
 };
 
 function buildServer() {
@@ -102,5 +104,5 @@ app.all(MCP_PATH, async (req, res) => {
 
 app.listen(PORT, HOST, () => {
   console.log(`DefaultVerifier MCP Phase A listening on http://${HOST}:${PORT}${MCP_PATH}`);
-  console.log('Tools: verify_receipt, get_verification_log');
+  console.log('Tools: verify_receipt, get_verification_log, verify_receipt_v02');
 });
